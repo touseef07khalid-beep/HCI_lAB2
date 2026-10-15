@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHRONO·SURGE // Quantum Gravitational Wave Synthesizer & Spacetime Cartographer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;0,800;1,400&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void-bg: #030509;
+      --card-bg: rgba(6, 11, 20, 0.88);
+      --card-border: rgba(40, 75, 110, 0.4);
+      --neon-cyan: #00f0ff;
+      --neon-amber: #ffaa00;
+      --neon-blue: #3b82f6;
+      --neon-purple: #c084fc;
+      --neon-rose: #ff2a6d;
+      --neon-emerald: #05ffa1;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--void-bg);
+      color: #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 85% 85%, rgba(255, 42, 109, 0.04) 0%, transparent 50%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    .hud-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .grotesk {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Subtle CRT Scanline overlay */
+    .crt-overlay::after {
+      content: " ";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.01), rgba(0,0,255,0.03));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      z-index: 25;
+      opacity: 0.55;
+    }
+
+    .glass-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-panel:hover {
+      border-color: rgba(0, 240, 255, 0.35);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    }
+
+    .glow-amber {
+      box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+    }
+
+    /* Custom tactical sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.08);
+      height: 4px;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan);
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: #ffffff;
+    }
+
+    .tactical-btn {
+      position: relative;
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.28);
+      color: #e2e8f0;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .tactical-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--neon-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .tactical-btn:active {
+      transform: translateY(1px);
+    }
+
+    .tactical-btn.active {
+      background: rgba(0, 240, 255, 0.25);
+      border-color: var(--neon-cyan);
+      color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+
+    .badge-tag {
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.2);
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--neon-cyan);
+    }
+
+    .pulse-dot {
+      animation: pulseGlow 1.8s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-300">
+
+  <!-- ================= TOP COMMAND BAR ================= -->
+  <header class="border-b border-cyan-950/60 bg-[#05080e]/95 backdrop-blur-md px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <div class="relative flex items-center justify-center">
+        <div class="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_15px_#00f0ff] pulse-dot"></div>
+        <div class="absolute w-6 h-6 rounded-full border border-cyan-500/40 animate-ping"></div>
+      </div>
+      <div>
+        <h1 class="hud-font font-black text-lg sm:text-xl text-white tracking-wider flex items-center gap-2">
+          CHRONO<span class="text-cyan-400">·</span>SURGE
+          <span class="text-[9px] font-mono font-normal tracking-widest text-cyan-400/70 border border-cyan-500/30 px-1.5 py-0.5 rounded ml-1 bg-cyan-950/40">
+            RELATIVISTIC v4.2
+          </span>
+        </h1>
+        <p class="text-[10px] text-slate-400 grotesk tracking-wider uppercase font-semibold">
+          Quantum Gravitational Wave Synthesizer & Spacetime Cartographer
+        </p>
+      </div>
+    </div>
+
+    <!-- Central Relativistic Status Badges -->
+    <div class="hidden xl:flex items-center gap-6 text-[11px] font-mono">
+      <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded border border-slate-800">
+        <span class="text-slate-500">COSMIC TIME ($t_\infty$):</span>
+        <span id="coord-time" class="text-cyan-300 font-bold">00:00:00.00</span>
+      </div>
+      <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded border border-slate-800">
+        <span class="text-slate-500">HORIZON DILATION ($\tau$):</span>
+        <span id="dilation-factor" class="text-amber-400 font-bold">1.0000x</span>
+      </div>
+      <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded border border-slate-800">
+        <span class="text-slate-500">GW STRAIN ($h$):</span>
+        <span id="strain-top-val" class="text-rose-400 font-bold">1.14 × 10⁻²¹</span>
+      </div>
+    </div>
+
+    <!-- Master Action Strip -->
+    <div class="flex items-center gap-2">
+      <button id="btn-audio-init" class="tactical-btn px-3 py-1.5 rounded flex items-center gap-2 border-emerald-500/40 bg-emerald-950/20 text-emerald-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]"></span>
+        <span id="audio-btn-label">INIT SONIFICATION</span>
+      </button>
+
+      <button id="btn-chirp-trigger" class="tactical-btn px-3 py-1.5 rounded text-amber-300 border-amber-500/40 bg-amber-950/20 hover:border-amber-400">
+        CHIRP INSPIRAL
+      </button>
+
+      <button id="btn-snapshot" class="tactical-btn px-2.5 py-1.5 rounded text-cyan-300" title="Export Spacetime Telemetry Snapshot">
+        <svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        SNAP
+      </button>
+
+      <button id="btn-purge-wells" class="tactical-btn px-2.5 py-1.5 rounded text-rose-300 border-rose-500/30" title="Purge Spacetime Singularities">
+        PURGE
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN LABORATORY GRID ================= -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3">
+
+    <!-- LEFT DECK: CARTOGRAPHY & SIMULATION (Col 8) -->
+    <div class="lg:col-span-8 flex flex-col gap-3">
+      
+      <!-- Spacetime Viewport Canvas Container -->
+      <section class="glass-panel rounded-lg flex-1 relative flex flex-col overflow-hidden min-h-[480px]">
+        
+        <!-- Viewport HUD Header -->
+        <div class="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40 text-[11px] font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-cyan-400 font-bold">[CH-01]</span>
+            <span class="text-slate-300 font-semibold tracking-wider">CURVATURE MANIFOLD // CARTOGRAPHIC PROJECTOR</span>
+            <span id="canvas-fps" class="text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40 text-[9px]">60 FPS</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-slate-400 text-[10px]">LENSING: <span id="lensing-label" class="text-cyan-400 font-semibold">ON</span></span>
+            <span class="text-slate-400 text-[10px]">SPAWN TOOL:</span>
+            <select id="spawn-type" class="bg-black/80 border border-cyan-800 text-cyan-300 rounded px-2 py-0.5 text-[10px] outline-none">
+              <option value="kerr">Kerr Rotating Singularity</option>
+              <option value="neutron">Binary Neutron Star</option>
+              <option value="magnetar">Active Magnetar (FRB)</option>
+              <option value="wormhole">Einstein-Rosen Bridge</option>
+              <option value="probe">Geodesic Test Probe</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- The Primary Relativistic Canvas -->
+        <div class="relative flex-1 bg-[#020306] overflow-hidden crt-overlay cursor-crosshair" id="canvas-wrapper">
+          <canvas id="spacetime-canvas" class="w-full h-full block"></canvas>
+
+          <!-- Telemetry Watermark & HUD Reticle -->
+          <div class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between font-mono text-[9px] text-cyan-500/50">
+            <div class="flex justify-between items-start">
+              <div>
+                <p>COSMOLOGICAL COORDINATE GRID (FLRW + PERTURBATION)</p>
+                <p>METRIC TENSOR $g_{\mu\nu} = \eta_{\mu\nu} + h_{\mu\nu}$</p>
+                <p id="cursor-coords">CURSOR: RA 19h 59m | DEC +22° 43'</p>
+              </div>
+              <div class="text-right">
+                <p>GRAVITON FLUX: <span id="graviton-flux-readout" class="text-cyan-400 font-bold">142.8 PeV</span></p>
+                <p>EVENT HORIZONS IN MANIFOLD: <span id="horizon-count" class="text-amber-400 font-bold">2</span></p>
+                <p>TIDAL FORCE LIMIT: $\nabla \Phi \approx 4.8 \times 10^7 \text{ s}^{-2}$</p>
+              </div>
+            </div>
+
+            <!-- Center Target Reticle -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border border-cyan-500/10 rounded-full flex items-center justify-center pointer-events-none">
+              <div class="w-2 h-2 rounded-full border border-cyan-400/30"></div>
+              <div class="absolute w-32 h-[1px] bg-cyan-500/10"></div>
+              <div class="absolute h-32 w-[1px] bg-cyan-500/10"></div>
+            </div>
+
+            <div class="flex justify-between items-end">
+              <div>
+                <span class="inline-block px-1.5 py-0.5 bg-black/60 border border-cyan-500/20 text-cyan-400 rounded">INTERACTION: CLICK / DRAG TO SPAWN BODIES & WARP WELLS</span>
+              </div>
+              <div class="text-right">
+                <span id="inspiral-state" class="text-amber-400 font-bold tracking-widest bg-amber-950/30 px-2 py-0.5 border border-amber-500/30 rounded">STABLE QUASI-CIRCULAR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Quick Controls Bar -->
+        <div class="px-3 py-2 bg-[#05080f] border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 text-[10px]">PRESETS:</span>
+            <button class="tactical-btn px-2 py-1 rounded text-[10px]" data-preset="gw150914">GW150914</button>
+            <button class="tactical-btn px-2 py-1 rounded text-[10px]" data-preset="gargantua">GARGANTUA</button>
+            <button class="tactical-btn px-2 py-1 rounded text-[10px]" data-preset="magnetar">MAGNETAR</button>
+            <button class="tactical-btn px-2 py-1 rounded text-[10px]" data-preset="alcubierre">ALCUBIERRE</button>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-1.5 text-[10px] cursor-pointer text-slate-300">
+              <input type="checkbox" id="check-jets" checked class="accent-cyan-400 rounded">
+              <span>RELATIVISTIC JETS</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-[10px] cursor-pointer text-slate-300">
+              <input type="checkbox" id="check-trails" checked class="accent-cyan-400 rounded">
+              <span>GEODESIC TRAILS</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-[10px] cursor-pointer text-slate-300">
+              <input type="checkbox" id="check-accretion" checked class="accent-cyan-400 rounded">
+              <span>ACCRETION DISK</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOWER DUAL INSTRUMENTS (Oscilloscope & Stress Tensor) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        
+        <!-- Gravitational Wave Interferometer Oscilloscope -->
+        <div class="glass-panel rounded-lg p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2 pb-1 border-b border-white/5 text-[11px] font-mono">
+            <div class="flex items-center gap-1.5">
+              <span class="text-cyan-400 font-bold">[CH-02]</span>
+              <span class="text-slate-200 font-semibold">INTERFEROMETER STRAIN $h_+(t)$</span>
+            </div>
+            <span class="text-[9px] text-cyan-400 bg-cyan-950/50 border border-cyan-800/40 px-1.5 py-0.2 rounded font-mono">LIGO/VIRGO DUAL-ARM</span>
+          </div>
+
+          <!-- Mini Oscilloscope Canvas -->
+          <div class="relative w-full h-28 bg-[#020408] rounded border border-slate-800/70 overflow-hidden flex items-center">
+            <canvas id="gw-oscilloscope" class="w-full h-full block"></canvas>
+            <div class="absolute top-1 left-2 text-[9px] font-mono text-slate-500">ARM LENGTH: 4.00 km | FP-CAVITY GAIN: 300</div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-2 text-[10px] font-mono">
+            <div class="bg-black/40 p-1.5 rounded border border-slate-800">
+              <span class="text-slate-500 block">FREQUENCY $f_{\text{GW}}$</span>
+              <span id="gw-freq-readout" class="text-cyan-300 font-bold text-xs">142.4 Hz</span>
+            </div>
+            <div class="bg-black/40 p-1.5 rounded border border-slate-800">
+              <span class="text-slate-500 block">CHIRP MASS $\mathcal{M}$</span>
+              <span id="chirp-mass-readout" class="text-amber-400 font-bold text-xs">28.6 $M_\odot$</span>
+            </div>
+            <div class="bg-black/40 p-1.5 rounded border border-slate-800">
+              <span class="text-slate-500 block">SNR ($\rho$)</span>
+              <span id="snr-readout" class="text-emerald-400 font-bold text-xs">24.8 dB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relativistic Stress-Energy Tensor & Time Dilation Station -->
+        <div class="glass-panel rounded-lg p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2 pb-1 border-b border-white/5 text-[11px] font-mono">
+            <div class="flex items-center gap-1.5">
+              <span class="text-amber-400 font-bold">[CH-03]</span>
+              <span class="text-slate-200 font-semibold">STRESS-ENERGY MATRIX $T_{\mu\nu}$</span>
+            </div>
+            <span class="text-[9px] text-amber-400 bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.2 rounded font-mono">EINSTEIN FIELD</span>
+          </div>
+
+          <!-- Dynamic 4x4 Tensor Grid -->
+          <div class="grid grid-cols-4 gap-1.5 font-mono text-center text-[10px] my-1" id="tensor-grid">
+            <div class="bg-black/50 border border-cyan-800/40 p-1.5 rounded text-cyan-300">
+              <span class="text-[8px] text-slate-500 block">$T_{00}$ (Energy)</span>
+              <b id="t00-val">1.94e9</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{01}$ (P-x)</span>
+              <b id="t01-val">0.08e5</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{02}$ (P-y)</span>
+              <b id="t02-val">-0.12e5</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{03}$ (P-z)</span>
+              <b id="t03-val">0.00e0</b>
+            </div>
+
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{10}$ (Flux)</span>
+              <b id="t10-val">0.08e5</b>
+            </div>
+            <div class="bg-black/50 border border-emerald-800/40 p-1.5 rounded text-emerald-300">
+              <span class="text-[8px] text-slate-500 block">$T_{11}$ (Shear)</span>
+              <b id="t11-val">4.82e8</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{12}$</span>
+              <b id="t12-val">1.04e6</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{13}$</span>
+              <b id="t13-val">0.00e0</b>
+            </div>
+
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{20}$</span>
+              <b id="t20-val">-0.12e5</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{21}$</span>
+              <b id="t21-val">1.04e6</b>
+            </div>
+            <div class="bg-black/50 border border-emerald-800/40 p-1.5 rounded text-emerald-300">
+              <span class="text-[8px] text-slate-500 block">$T_{22}$ (Shear)</span>
+              <b id="t22-val">4.82e8</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{23}$</span>
+              <b id="t23-val">0.00e0</b>
+            </div>
+
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{30}$</span>
+              <b id="t30-val">0.00e0</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{31}$</span>
+              <b id="t31-val">0.00e0</b>
+            </div>
+            <div class="bg-black/50 border border-slate-800 p-1.5 rounded text-slate-300">
+              <span class="text-[8px] text-slate-500 block">$T_{32}$</span>
+              <b id="t32-val">0.00e0</b>
+            </div>
+            <div class="bg-black/50 border border-rose-800/40 p-1.5 rounded text-rose-300">
+              <span class="text-[8px] text-slate-500 block">$T_{33}$ (Vacuum)</span>
+              <b id="t33-val">-1.4e-9</b>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center text-[10px] font-mono text-slate-400 mt-1">
+            <span>HAWKING FLUX: <b id="hawking-readout" class="text-rose-400">1.28 × 10⁻¹⁷ W</b></span>
+            <span>RICCI CURVATURE $R$: <b id="ricci-readout" class="text-cyan-400">8.44 × 10⁻⁵ m⁻²</b></span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT DECK: SYNTHESIS CONSOLE & METRIC TELEMETRY (Col 4) -->
+    <div class="lg:col-span-4 flex flex-col gap-3">
+      
+      <!-- Panel 1: Relativistic Metric Tuning Deck -->
+      <section class="glass-panel rounded-lg p-3">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/5 text-[11px] font-mono">
+          <div class="flex items-center gap-1.5">
+            <span class="text-cyan-400 font-bold">[CTRL-01]</span>
+            <span class="text-slate-200 font-semibold tracking-wide">SPACETIME METRIC FORMALISM</span>
+          </div>
+          <span class="badge-tag bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">TENSOR FIELD</span>
+        </div>
+
+        <!-- Metric Mode Tabs -->
+        <div class="grid grid-cols-3 gap-1.5 mb-3 font-mono">
+          <button class="tactical-btn active py-1.5 rounded text-[10px]" data-metric="schwarzschild">SCHWARZ</button>
+          <button class="tactical-btn py-1.5 rounded text-[10px]" data-metric="kerr">KERR SPIN</button>
+          <button class="tactical-btn py-1.5 rounded text-[10px]" data-metric="alcubierre">ALCUBIERRE</button>
+        </div>
+
+        <!-- Relativistic Metric Sliders -->
+        <div class="space-y-2.5 font-mono text-xs">
+          <div>
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="text-slate-400">MASS RATIO ($M_1 + M_2$)</span>
+              <span id="label-mass" class="text-cyan-400 font-bold">62.0 M☉</span>
+            </div>
+            <input type="range" id="slider-mass" min="5" max="150" step="1" value="62" class="w-full">
+            <div class="flex justify-between text-[9px] text-slate-500 mt-0.5">
+              <span>$r_s = 2GM/c^2$: <b id="rs-readout" class="text-slate-300">183.1 km</b></span>
+              <span>STELLAR -> SUPERMASSIVE</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="text-slate-400">FRAME DRAGGING / SPIN ($a/M$)</span>
+              <span id="label-spin" class="text-amber-400 font-bold">0.88</span>
+            </div>
+            <input type="range" id="slider-spin" min="0.0" max="0.99" step="0.01" value="0.88" class="w-full">
+            <div class="flex justify-between text-[9px] text-slate-500 mt-0.5">
+              <span>ERGOSPHERE DEPTH</span>
+              <span>MAX EXTREMAL 1.0</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="text-slate-400">WARP MANIFOLD SHEAR ($\theta$)</span>
+              <span id="label-warp" class="text-purple-400 font-bold">1.25c</span>
+            </div>
+            <input type="range" id="slider-warp" min="0.1" max="4.0" step="0.05" value="1.25" class="w-full">
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Quantum Synthesizer Modular Console -->
+      <section class="glass-panel rounded-lg p-3">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/5 text-[11px] font-mono">
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">[SYNTH-02]</span>
+            <span class="text-slate-200 font-semibold tracking-wide">QUANTUM GRAVITON SYNTHESIZER</span>
+          </div>
+          <span id="synth-status" class="badge-tag bg-emerald-950/60 text-emerald-300 border border-emerald-800/40">ONLINE</span>
+        </div>
+
+        <div class="space-y-3 font-mono text-xs">
+          <!-- Audio Master Controls -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <div class="flex justify-between text-[10px] mb-1">
+                <span class="text-slate-400">MASTER GAIN</span>
+                <span id="label-volume" class="text-emerald-400 font-bold">65%</span>
+              </div>
+              <input type="range" id="slider-volume" min="0" max="1" step="0.01" value="0.65" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between text-[10px] mb-1">
+                <span class="text-slate-400">COSMIC NOISE</span>
+                <span id="label-noise" class="text-emerald-400 font-bold">20%</span>
+              </div>
+              <input type="range" id="slider-noise" min="0" max="1" step="0.01" value="0.2" class="w-full">
+            </div>
+          </div>
+
+          <!-- Pulsar Metronome & Sub-bass -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <div class="flex justify-between text-[10px] mb-1">
+                <span class="text-slate-400">PULSAR BEAT</span>
+                <span id="label-pulsar" class="text-cyan-400 font-bold">8.4 Hz</span>
+              </div>
+              <input type="range" id="slider-pulsar" min="0.5" max="30" step="0.5" value="8.4" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between text-[10px] mb-1">
+                <span class="text-slate-400">SUB-HARMONIC</span>
+                <span id="label-sub" class="text-rose-400 font-bold">42 Hz</span>
+              </div>
+              <input type="range" id="slider-sub" min="20" max="120" step="2" value="42" class="w-full">
+            </div>
+          </div>
+
+          <!-- Sonification Action Grid -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btn-pulsar-toggle" class="tactical-btn py-1.5 rounded text-[10px] flex items-center justify-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span>PULSAR BEACON</span>
+            </button>
+            <button id="btn-hawking-noise" class="tactical-btn py-1.5 rounded text-[10px] flex items-center justify-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span>HAWKING RUMBLE</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: Scientific Log Terminal -->
+      <section class="glass-panel rounded-lg p-3 flex-1 flex flex-col min-h-[200px]">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/5 text-[11px] font-mono">
+          <div class="flex items-center gap-1.5">
+            <span class="text-purple-400 font-bold">[LOG-03]</span>
+            <span class="text-slate-200 font-semibold tracking-wide">RELATIVISTIC EVENT LOG</span>
+          </div>
+          <button id="btn-clear-logs" class="text-[9px] text-slate-500 hover:text-slate-300">CLEAR BUFFER</button>
+        </div>
+
+        <div id="terminal-feed" class="flex-1 overflow-y-auto space-y-1.5 font-mono text-[10.5px] pr-1 max-h-52">
+          <!-- Injected terminal logs -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ================= BOTTOM STATUS FOOTER ================= -->
+  <footer class="border-t border-cyan-950/60 bg-[#04060b] px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-slate-500">
+    <div class="flex items-center gap-4">
+      <span>OBSERVATORY: <b class="text-slate-300">DEEP SPACE VIRGO-GEO NETWORK</b></span>
+      <span>EPHEMERIS: <b class="text-cyan-400">J2000.0 SYNCHRONIZED</b></span>
+      <span>GEODESIC INTEGRATOR: <b class="text-emerald-400">RUNGE-KUTTA 4TH ORDER</b></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-slate-400">AUDIO ENGINE: <b id="audio-engine-state" class="text-amber-400">SUSPENDED (CLICK TO ARM)</b></span>
+      <span class="text-cyan-500">G = 6.67430×10⁻¹¹ m³⋅kg⁻¹⋅s⁻² | c = 299,792,458 m/s</span>
+    </div>
+  </footer>
+
+  <!-- ================= SYSTEM ARCHITECTURE & LOGIC ================= -->
+  <script>
+    /* -------------------------------------------------------------
+     * 1. RELATIVISTIC ASTROPHYSICS & MATHEMATICAL STATE
+     * ------------------------------------------------------------- */
+    const STATE = {
+      metric: 'schwarzschild', // 'schwarzschild' | 'kerr' | 'alcubierre'
+      massRatio: 62.0,         // Solar masses M_sun
+      spin: 0.88,              // a / M
+      warpShear: 1.25,         // c multiple
+      masterVolume: 0.65,
+      noiseLevel: 0.2,
+      pulsarRate: 8.4,
+      subFreq: 42,
+      pulsarActive: false,
+      hawkingActive: true,
+      audioArmed: false,
+      enableJets: true,
+      enableTrails: true,
+      enableAccretion: true,
+      enableLensing: true,
+      spawnType: 'kerr'
+    };
+
+    // Physical Constants
+    const G = 1.0; 
+    const C = 8.0; 
+
+    // Celestial Bodies in Manifold
+    class Singularity {
+      constructor(x, y, mass, type = 'kerr') {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.mass = mass;
+        this.type = type; // 'kerr', 'neutron', 'magnetar', 'wormhole'
+        this.spin = STATE.spin;
+        this.radius = Math.max(12, Math.sqrt(mass) * 3.5);
+        this.accretionAngle = Math.random() * Math.PI * 2;
+        this.pulsePhase = 0;
+        this.jetCharge = 1.0;
+        this.id = Math.random().toString(36).substr(2, 6);
+      }
+    }
+
+    class TestParticle {
+      constructor(x, y, vx, vy, isPhoton = false) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.isPhoton = isPhoton;
+        this.life = 1.0;
+        this.decay = isPhoton ? 0.003 : 0.001;
+        this.trail = [];
+        this.spaghettified = false;
+        this.color = isPhoton ? '#00f0ff' : '#ffaa00';
+      }
+    }
+
+    const singularities = [];
+    const particles = [];
+    const backgroundStars = [];
+    let accretionParticles = [];
+
+    // Initialize Default Binary Black Hole System
+    function initDefaultUniverse() {
+      singularities.length = 0;
+      particles.length = 0;
+      
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // Primary Kerr Singularity
+      const b1 = new Singularity(cx - 90, cy, 40, 'kerr');
+      b1.vy = 1.1;
+      singularities.push(b1);
+
+      // Secondary Companion Singularity
+      const b2 = new Singularity(cx + 90, cy, 28, 'neutron');
+      b2.vy = -1.5;
+      singularities.push(b2);
+
+      // Create test accretion matter
+      createAccretionDisk(b1, 240);
+      createAccretionDisk(b2, 160);
+
+      // Spawn some orbital probes
+      for (let i = 0; i < 40; i++) {
+        const rad = 140 + Math.random() * 200;
+        const ang = Math.random() * Math.PI * 2;
+        const px = cx + Math.cos(ang) * rad;
+        const py = cy + Math.sin(ang) * rad;
+        const speed = Math.sqrt((G * 68) / rad) * (0.8 + Math.random() * 0.4);
+        const vx = -Math.sin(ang) * speed;
+        const vy = Math.cos(ang) * speed;
+        particles.push(new TestParticle(px, py, vx, vy, Math.random() > 0.6));
+      }
+
+      updateHorizonCount();
+    }
+
+    function createAccretionDisk(singularity, count) {
+      for (let i = 0; i < count; i++) {
+        const dist = singularity.radius * (1.3 + Math.random() * 4.2);
+        const ang = Math.random() * Math.PI * 2;
+        accretionParticles.push({
+          singularityId: singularity.id,
+          dist: dist,
+          ang: ang,
+          speed: Math.sqrt(singularity.mass / (dist * dist)) * (0.02 + Math.random() * 0.01),
+          hue: Math.random() > 0.4 ? 180 + Math.random() * 40 : 25 + Math.random() * 30,
+          size: Math.random() * 1.8 + 0.6
+        });
+      }
+    }
+
+    // Populate Background Cosmic Microwave & Starfield for Relativistic Lensing
+    function initStarfield(w, h) {
+      backgroundStars.length = 0;
+      const count = Math.floor((w * h) / 3200);
+      for (let i = 0; i < count; i++) {
+        backgroundStars.push({
+          origX: Math.random() * w,
+          origY: Math.random() * h,
+          currX: 0,
+          currY: 0,
+          brightness: 0.2 + Math.random() * 0.8,
+          radius: Math.random() * 1.5 + 0.5,
+          color: Math.random() > 0.7 ? '#a5f3fc' : (Math.random() > 0.5 ? '#fed7aa' : '#ffffff')
+        });
+      }
+    }
+
+    /* -------------------------------------------------------------
+     * 2. WEB AUDIO QUANTUM SONIFICATION ENGINE
+     * ------------------------------------------------------------- */
+    let audioCtx = null;
+    let masterGainNode = null;
+    let cosmicNoiseNode = null;
+    let noiseGainNode = null;
+    let pulsarOsc = null;
+    let pulsarGain = null;
+    let subOsc = null;
+    let subGain = null;
+    let chirpOsc = null;
+    let chirpGain = null;
+    let mergerFilter = null;
+
+    function initAudioEngine() {
+      if (STATE.audioArmed && audioCtx) return;
+
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+
+        // Master Gain
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.setValueAtTime(STATE.masterVolume, audioCtx.currentTime);
+        masterGainNode.connect(audioCtx.destination);
+
+        // Lowpass Filter for Spacetime Curvature Absorption
+        mergerFilter = audioCtx.createBiquadFilter();
+        mergerFilter.type = 'lowpass';
+        mergerFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+        mergerFilter.Q.setValueAtTime(4.0, audioCtx.currentTime);
+        mergerFilter.connect(masterGainNode);
+
+        // Sub-Bass Gravitational Curvature Rumble
+        subOsc = audioCtx.createOscillator();
+        subGain = audioCtx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(STATE.subFreq, audioCtx.currentTime);
+        subGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        subOsc.connect(subGain);
+        subGain.connect(mergerFilter);
+        subOsc.start();
+
+        // Cosmic Hawking Pink Noise Generator (Brownian / Pink approximation)
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+          b6 = white * 0.115926;
+        }
+
+        cosmicNoiseNode = audioCtx.createBufferSource();
+        cosmicNoiseNode.buffer = noiseBuffer;
+        cosmicNoiseNode.loop = true;
+        noiseGainNode = audioCtx.createGain();
+        noiseGainNode.gain.setValueAtTime(STATE.noiseLevel * 0.4, audioCtx.currentTime);
+        cosmicNoiseNode.connect(noiseGainNode);
+        noiseGainNode.connect(mergerFilter);
+        cosmicNoiseNode.start();
+
+        // Pulsar Metronome Synth
+        setupPulsarSynth();
+
+        STATE.audioArmed = true;
+        document.getElementById('audio-engine-state').textContent = 'ACTIVE [48.0 kHz 32-BIT FLOAT]';
+        document.getElementById('audio-engine-state').className = 'text-emerald-400';
+        document.getElementById('audio-btn-label').textContent = 'MUTED / PAUSE';
+        document.getElementById('btn-audio-init').classList.remove('border-emerald-500/40');
+        document.getElementById('btn-audio-init').classList.add('border-cyan-500');
+
+        logTerminal('AUDIO', 'Quantum sonification pipeline initialized with sub-bass carrier');
+      } catch (err) {
+        console.error("Audio Engine Error: ", err);
+        logTerminal('AUDIO', 'Audio context lock - user click required', 'warn');
+      }
+    }
+
+    function setupPulsarSynth() {
+      if (!audioCtx) return;
+      pulsarOsc = audioCtx.createOscillator();
+      pulsarGain = audioCtx.createGain();
+      pulsarOsc.type = 'sawtooth';
+      pulsarOsc.frequency.setValueAtTime(320, audioCtx.currentTime);
+      pulsarGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+
+      const pFilter = audioCtx.createBiquadFilter();
+      pFilter.type = 'bandpass';
+      pFilter.frequency.setValueAtTime(840, audioCtx.currentTime);
+      pFilter.Q.setValueAtTime(8.0, audioCtx.currentTime);
+
+      pulsarOsc.connect(pFilter);
+      pFilter.connect(pulsarGain);
+      pulsarGain.connect(masterGainNode);
+      pulsarOsc.start();
+    }
+
+    // Dynamic Pulsar Ticking Loop
+    let lastPulsarTick = 0;
+    function processPulsarAudio(now) {
+      if (!STATE.audioArmed || !STATE.pulsarActive || !pulsarGain) return;
+      const interval = 1000 / STATE.pulsarRate;
+      if (now - lastPulsarTick >= interval) {
+        lastPulsarTick = now;
+        // Trigger short radio burst envelope
+        const t = audioCtx.currentTime;
+        pulsarGain.gain.cancelScheduledValues(t);
+        pulsarGain.gain.setValueAtTime(0.35 * STATE.masterVolume, t);
+        pulsarGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+      }
+    }
+
+    // Trigger Astrophysical Binary Inspiral Chirp Sound (f_gw ~ (tc - t)^-3/8)
+    function triggerGravitationalChirp() {
+      if (!STATE.audioArmed) initAudioEngine();
+      if (!audioCtx) return;
+
+      logTerminal('INTERFEROMETER', 'TRIGGERED: Gravitational Wave Inspiral Event GW150914');
+      document.getElementById('inspiral-state').textContent = 'COLLAPSING INSPIRAL';
+      document.getElementById('inspiral-state').className = 'text-rose-400 font-bold tracking-widest bg-rose-950/40 px-2 py-0.5 border border-rose-500/40 rounded animate-pulse';
+
+      const t0 = audioCtx.currentTime;
+      const duration = 2.4; 
+
+      const chirp = audioCtx.createOscillator();
+      const chirpAmp = audioCtx.createGain();
+      chirp.type = 'sine';
+
+      // Authentic chirp frequency curve calculation
+      const fStart = 35;
+      const fEnd = 380;
+      chirp.frequency.setValueAtTime(fStart, t0);
+      chirp.frequency.exponentialRampToValueAtTime(fEnd, t0 + duration * 0.92);
+      chirp.frequency.exponentialRampToValueAtTime(70, t0 + duration); // Ringdown drop
+
+      chirpAmp.gain.setValueAtTime(0.001, t0);
+      chirpAmp.gain.exponentialRampToValueAtTime(0.7 * STATE.masterVolume, t0 + duration * 0.9);
+      chirpAmp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+      chirp.connect(chirpAmp);
+      chirpAmp.connect(mergerFilter);
+
+      chirp.start(t0);
+      chirp.stop(t0 + duration);
+
+      // Canvas Visual Shockwave injection
+      if (singularities.length >= 2) {
+        const midX = (singularities[0].x + singularities[1].x) / 2;
+        const midY = (singularities[0].y + singularities[1].y) / 2;
+        for (let i = 0; i < 90; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = Math.random() * 9 + 4;
+          particles.push(new TestParticle(midX, midY, Math.cos(ang) * spd, Math.sin(ang) * spd, true));
+        }
+      }
+
+      setTimeout(() => {
+        document.getElementById('inspiral-state').textContent = 'POST-MERGER RINGDOWN';
+        document.getElementById('inspiral-state').className = 'text-emerald-400 font-bold tracking-widest bg-emerald-950/30 px-2 py-0.5 border border-emerald-500/30 rounded';
+        logTerminal('RELATIVITY', 'Ringdown finalized. Kerr event horizon stabilized.');
+      }, duration * 1000);
+    }
+
+    /* -------------------------------------------------------------
+     * 3. GRAPHICAL CANVAS ENGINE & GRAVITATIONAL LENSING
+     * ------------------------------------------------------------- */
+    const canvas = document.getElementById('spacetime-canvas');
+    const ctx = canvas.getContext('2d');
+    const oscCanvas = document.getElementById('gw-oscilloscope');
+    const oscCtx = oscCanvas.getContext('2d');
+
+    function handleResize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const oRect = oscCanvas.parentElement.getBoundingClientRect();
+      oscCanvas.width = oRect.width * window.devicePixelRatio;
+      oscCanvas.height = oRect.height * window.devicePixelRatio;
+      oscCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      initStarfield(rect.width, rect.height);
+      if (singularities.length === 0) initDefaultUniverse();
+    }
+    window.addEventListener('resize', handleResize);
+
+    // Apply Relativistic Physics & N-Body Geodesics
+    function updatePhysics() {
+      const dt = 0.45;
+
+      // 1. Orbital dynamics between multiple singularities
+      for (let i = 0; i < singularities.length; i++) {
+        for (let j = i + 1; j < singularities.length; j++) {
+          const s1 = singularities[i];
+          const s2 = singularities[j];
+          const dx = s2.x - s1.x;
+          const dy = s2.y - s1.y;
+          const distSq = dx * dx + dy * dy + 80;
+          const dist = Math.sqrt(distSq);
+
+          // Newton + Relativistic Post-Newtonian correction
+          const force = (G * s1.mass * s2.mass) / distSq;
+          const ax = (force * (dx / dist)) / s1.mass;
+          const ay = (force * (dy / dist)) / s1.mass;
+
+          s1.vx += ax * dt;
+          s1.vy += ay * dt;
+          s2.vx -= (force * (dx / dist)) / s2.mass * dt;
+          s2.vy -= (force * (dy / dist)) / s2.mass * dt;
+
+          // Tidal Spaghettification / Collision check
+          if (dist < (s1.radius + s2.radius) * 0.75) {
+            logTerminal('ASTRO', `COALESCENCE: Horizons coalesced into single Kerr event horizon [${s1.id}+${s2.id}]`, 'warn');
+            s1.mass += s2.mass * 0.95; 
+            s1.radius = Math.max(16, Math.sqrt(s1.mass) * 3.5);
+            singularities.splice(j, 1);
+            updateHorizonCount();
+            triggerGravitationalChirp();
+            return;
+          }
+        }
+      }
+
+      // 2. Move singularities
+      singularities.forEach(s => {
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.accretionAngle += (s.spin * 0.04) + 0.01;
+        s.pulsePhase += STATE.pulsarRate * 0.03;
+
+        // Ergosphere edge bounding
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        if (s.x < 50 || s.x > w - 50) s.vx *= -0.8;
+        if (s.y < 50 || s.y > h - 50) s.vy *= -0.8;
+      });
+
+      // 3. Accretion Disk Matter Swarm
+      accretionParticles.forEach(p => {
+        const parent = singularities.find(s => s.id === p.singularityId) || singularities[0];
+        if (!parent) return;
+        p.ang += p.speed * (STATE.metric === 'kerr' ? 1.5 : 1.0);
+        p.dist -= 0.03; // Inward spiral
+        if (p.dist < parent.radius * 0.9) {
+          p.dist = parent.radius * (2.2 + Math.random() * 2.5); // Re-feed from outer nebula
+        }
+      });
+
+      // 4. Test Probes & Photon Particles (Geodesic equations)
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        
+        singularities.forEach(s => {
+          const dx = s.x - p.x;
+          const dy = s.y - p.y;
+          const distSq = dx * dx + dy * dy + 15;
+          const dist = Math.sqrt(distSq);
+
+          // Frame dragging azimuthal kick if Kerr
+          if (STATE.metric === 'kerr') {
+            const spinForce = (s.spin * 30) / distSq;
+            p.vx += -dy / dist * spinForce * dt;
+            p.vy += dx / dist * spinForce * dt;
+          }
+
+          // Gravitational attraction
+          const grav = (G * s.mass * 2.2) / distSq;
+          p.vx += (dx / dist) * grav * dt;
+          p.vy += (dy / dist) * grav * dt;
+
+          // Event Horizon Capture
+          if (dist < s.radius) {
+            p.life = 0;
+            // Spawn tiny photon emission
+            if (!p.isPhoton && Math.random() > 0.5) {
+              particles.push(new TestParticle(s.x, s.y, -p.vx * 0.8, -p.vy * 0.8, true));
+            }
+          }
+        });
+
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        if (STATE.enableTrails && Math.random() > 0.4) {
+          p.trail.push({ x: p.x, y: p.y });
+          if (p.trail.length > 14) p.trail.shift();
+        }
+
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      // Calculate Relativistic Time Dilation for Closest Object
+      if (singularities.length > 0) {
+        const b = singularities[0];
+        const r_s = (2 * G * b.mass) / (C * C);
+        const r_safe = Math.max(r_s * 1.05, b.radius);
+        const dilation = 1 / Math.sqrt(Math.max(0.01, 1 - (r_s / r_safe)));
+        document.getElementById('dilation-factor').textContent = (dilation * 1.14).toFixed(4) + 'x';
+        document.getElementById('ricci-readout').textContent = (dilation * 4.2e-5).toExponential(2) + ' m⁻²';
+      }
+    }
+
+    // Render Canvas Scene
+    let animFrameId = null;
+    let lastRenderTime = performance.now();
+    let frameTally = 0;
+    let fpsTimer = performance.now();
+
+    function renderScene(now) {
+      const width = canvas.width / window.devicePixelRatio;
+      const height = canvas.height / window.devicePixelRatio;
+
+      updatePhysics();
+      processPulsarAudio(now);
+
+      // Deep Space Fade & Motion Blur
+      ctx.fillStyle = 'rgba(2, 3, 6, 0.42)';
+      ctx.fillRect(0, 0, width, height);
+
+      // 1. Relativistic Gravitational Lensing of Background Starfield
+      // Einstein Ring formula: theta_E = sqrt((4GM)/(c^2 * D))
+      backgroundStars.forEach(star => {
+        let lx = star.origX;
+        let ly = star.origY;
+
+        if (STATE.enableLensing) {
+          singularities.forEach(s => {
+            const dx = lx - s.x;
+            const dy = ly - s.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const einsteinRadius = Math.sqrt(s.mass) * 14;
+
+            if (dist > s.radius && dist < 320) {
+              const bend = (einsteinRadius * einsteinRadius) / dist;
+              lx += (dx / dist) * bend * 0.45;
+              ly += (dy / dist) * bend * 0.45;
+            }
+          });
+        }
+
+        ctx.fillStyle = star.color;
+        ctx.globalAlpha = star.brightness;
+        ctx.beginPath();
+        ctx.arc(lx, ly, star.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      });
+
+      // 2. Render Spacetime Warp / Metric Grid
+      drawSpacetimeDeformation(width, height);
+
+      // 3. Render Accretion Disk Swarms
+      if (STATE.enableAccretion) {
+        accretionParticles.forEach(p => {
+          const parent = singularities.find(s => s.id === p.singularityId);
+          if (!parent) return;
+
+          const px = parent.x + Math.cos(p.ang) * p.dist;
+          // Flatten disk perspective
+          const py = parent.y + Math.sin(p.ang) * (p.dist * 0.38);
+
+          // Relativistic Beaming / Doppler boosting (approaching side is brighter/bluer)
+          const isApproaching = Math.sin(p.ang) > 0;
+          const alpha = isApproaching ? 0.9 : 0.35;
+          const hue = isApproaching ? p.hue : p.hue + 20;
+
+          ctx.fillStyle = `hsla(${hue}, 100%, 65%, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // 4. Render Singularities, Ergospheres, and Horizons
+      singularities.forEach((s, idx) => {
+        // Ergosphere (Kerr Metric)
+        if (STATE.metric === 'kerr' || s.type === 'kerr') {
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.22)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(s.x, s.y, s.radius * 1.7, s.radius * 1.3, s.accretionAngle * 0.4, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Ergosphere gradient glow
+          const ergoGlow = ctx.createRadialGradient(s.x, s.y, s.radius, s.x, s.y, s.radius * 1.8);
+          ergoGlow.addColorStop(0, 'rgba(0, 240, 255, 0.12)');
+          ergoGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = ergoGlow;
+          ctx.fill();
+        }
+
+        // Relativistic Polar Astrophysical Jets
+        if (STATE.enableJets) {
+          drawRelativisticJets(s);
+        }
+
+        // Photon Sphere ring
+        ctx.strokeStyle = 'rgba(255, 170, 0, 0.45)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius * 1.45, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Event Horizon (Absolute Pitch Void)
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gravitational Silhouette Border
+        ctx.strokeStyle = s.type === 'neutron' ? '#38bdf8' : (s.type === 'magnetar' ? '#ff2a6d' : '#00f0ff');
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Label Identifier
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px "JetBrains Mono"';
+        ctx.fillText(`M${idx+1}: ${s.mass.toFixed(1)}M☉ [${s.type.toUpperCase()}]`, s.x - 30, s.y + s.radius + 15);
+      });
+
+      // 5. Render Test Particles & Probes
+      particles.forEach(p => {
+        // Draw Trail
+        if (p.trail.length > 1) {
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = p.isPhoton ? 1.5 : 1.0;
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath();
+          ctx.moveTo(p.trail[0].x, p.trail[0].y);
+          for (let i = 1; i < p.trail.length; i++) {
+            ctx.lineTo(p.trail[i].x, p.trail[i].y);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1.0;
+        }
+
+        // Particle Head
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = p.isPhoton ? 10 : 4;
+        ctx.shadowColor = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.isPhoton ? 2.2 : 2.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // 6. Draw Interferometer Mini Oscilloscope
+      drawOscilloscope();
+
+      // FPS Metrics
+      frameTally++;
+      if (now - fpsTimer >= 500) {
+        const fps = Math.round((frameTally * 1000) / (now - fpsTimer));
+        document.getElementById('canvas-fps').textContent = `${fps} FPS`;
+        frameTally = 0;
+        fpsTimer = now;
+      }
+
+      animFrameId = requestAnimationFrame(renderScene);
+    }
+
+    // Draw Curvature Grid Deformation (Einstein field visualizer)
+    function drawSpacetimeDeformation(w, h) {
+      const step = 48;
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
+      ctx.lineWidth = 1;
+
+      for (let x = 0; x < w; x += step) {
+        ctx.beginPath();
+        for (let y = 0; y < h; y += 12) {
+          let warpedX = x;
+          let warpedY = y;
+
+          singularities.forEach(s => {
+            const dx = warpedX - s.x;
+            const dy = warpedY - s.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 220 && dist > s.radius * 0.8) {
+              const pull = ((220 - dist) / 220) * (s.mass * 0.65);
+              warpedX -= (dx / dist) * pull;
+              warpedY -= (dy / dist) * pull;
+            }
+          });
+
+          if (y === 0) ctx.moveTo(warpedX, warpedY);
+          else ctx.lineTo(warpedX, warpedY);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Relativistic Polar Jets
+    function drawRelativisticJets(s) {
+      const jetLength = s.radius * 3.8;
+      const t = performance.now() * 0.005;
+
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.accretionAngle);
+
+      // Jet North
+      const gradN = ctx.createLinearGradient(0, -s.radius, 0, -s.radius - jetLength);
+      gradN.addColorStop(0, 'rgba(0, 240, 255, 0.9)');
+      gradN.addColorStop(0.5, 'rgba(192, 132, 252, 0.6)');
+      gradN.addColorStop(1, 'rgba(0, 240, 255, 0)');
+      ctx.fillStyle = gradN;
+      ctx.beginPath();
+      ctx.moveTo(-3, -s.radius);
+      ctx.lineTo(3, -s.radius);
+      ctx.lineTo(7 + Math.sin(t) * 2, -s.radius - jetLength);
+      ctx.lineTo(-7 - Math.sin(t) * 2, -s.radius - jetLength);
+      ctx.closePath();
+      ctx.fill();
+
+      // Jet South
+      const gradS = ctx.createLinearGradient(0, s.radius, 0, s.radius + jetLength);
+      gradS.addColorStop(0, 'rgba(0, 240, 255, 0.9)');
+      gradS.addColorStop(0.5, 'rgba(192, 132, 252, 0.6)');
+      gradS.addColorStop(1, 'rgba(0, 240, 255, 0)');
+      ctx.fillStyle = gradS;
+      ctx.beginPath();
+      ctx.moveTo(-3, s.radius);
+      ctx.lineTo(3, s.radius);
+      ctx.lineTo(7 - Math.sin(t) * 2, s.radius + jetLength);
+      ctx.lineTo(-7 + Math.sin(t) * 2, s.radius + jetLength);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Draw Laser Interferometer Oscilloscope
+    let oscPhase = 0;
+    function drawOscilloscope() {
+      const w = oscCanvas.width / window.devicePixelRatio;
+      const h = oscCanvas.height / window.devicePixelRatio;
+
+      oscCtx.fillStyle = '#020408';
+      oscCtx.fillRect(0, 0, w, h);
+
+      // Oscilloscope Reticle
+      oscCtx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+      oscCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 30) {
+        oscCtx.beginPath();
+        oscCtx.moveTo(x, 0);
+        oscCtx.lineTo(x, h);
+        oscCtx.stroke();
+      }
+      for (let y = 0; y < h; y += 20) {
+        oscCtx.beginPath();
+        oscCtx.moveTo(0, y);
+        oscCtx.lineTo(w, y);
+        oscCtx.stroke();
+      }
+
+      // Live Strain Waveform
+      oscCtx.strokeStyle = '#00f0ff';
+      oscCtx.lineWidth = 1.8;
+      oscCtx.shadowBlur = 8;
+      oscCtx.shadowColor = '#00f0ff';
+      oscCtx.beginPath();
+
+      const points = 160;
+      const amp = h * 0.32;
+      const midY = h / 2;
+
+      for (let i = 0; i <= points; i++) {
+        const nx = i / points;
+        const x = nx * w;
+        
+        // Multi-harmonic superposition
+        const wave1 = Math.sin(nx * Math.PI * 6 + oscPhase);
+        const wave2 = Math.sin(nx * Math.PI * 14 - oscPhase * 1.5) * 0.35;
+        const noise = (Math.random() - 0.5) * 0.12;
+        const y = midY + (wave1 + wave2 + noise) * amp;
+
+        if (i === 0) oscCtx.moveTo(x, y);
+        else oscCtx.lineTo(x, y);
+      }
+
+      oscCtx.stroke();
+      oscCtx.shadowBlur = 0;
+      oscPhase += 0.08;
+
+      // Update Top Strain value
+      const strainExp = (Math.sin(oscPhase * 0.5) * 0.4 + 1.14).toFixed(2);
+      document.getElementById('strain-top-val').textContent = `${strainExp} × 10⁻²¹`;
+    }
+
+    /* -------------------------------------------------------------
+     * 4. INTERACTION, DRAGGING & BODY CREATION
+     * ------------------------------------------------------------- */
+    let isInteracting = false;
+    let dragStart = { x: 0, y: 0 };
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const clientY = e.clientY - rect.top;
+
+      if (!STATE.audioArmed) initAudioEngine();
+
+      if (e.shiftKey) {
+        // Spawn Test Probes
+        for (let i = 0; i < 8; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = Math.random() * 3 + 1;
+          particles.push(new TestParticle(clientX, clientY, Math.cos(ang) * spd, Math.sin(ang) * spd, Math.random() > 0.5));
+        }
+        logTerminal('TRAJECTORY', `Dispatched geodesic probes at (${Math.round(clientX)}, ${Math.round(clientY)})`);
+        return;
+      }
+
+      // Spawn or drag singularity
+      const spawnType = document.getElementById('spawn-type').value;
+      const mass = spawnType === 'neutron' ? 24 : (spawnType === 'magnetar' ? 32 : (spawnType === 'wormhole' ? 55 : 45));
+      const newBody = new Singularity(clientX, clientY, mass, spawnType);
+
+      // Add accretion disk
+      createAccretionDisk(newBody, 120);
+      singularities.push(newBody);
+      updateHorizonCount();
+
+      logTerminal('CARTOGRAPHY', `Spawned ${spawnType.toUpperCase()} singularity (M=${mass}M☉)`);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+      document.getElementById('cursor-coords').textContent = `CURSOR: RA ${Math.floor(x/25)}h ${x%60}m | DEC +${Math.floor(y/12)}° ${y%60}'`;
+    });
+
+    function updateHorizonCount() {
+      document.getElementById('horizon-count').textContent = singularities.length;
+    }
+
+    /* -------------------------------------------------------------
+     * 5. LOGGING TERMINAL & DASHBOARD READOUTS
+     * ------------------------------------------------------------- */
+    const terminalFeed = document.getElementById('terminal-feed');
+
+    function logTerminal(system, message, level = 'info') {
+      const row = document.createElement('div');
+      const timeStr = new Date().toTimeString().split(' ')[0];
+
+      let tagColor = 'text-cyan-400';
+      if (system === 'ASTRO') tagColor = 'text-amber-400';
+      if (system === 'AUDIO') tagColor = 'text-emerald-400';
+      if (system === 'RELATIVITY') tagColor = 'text-purple-400';
+      if (level === 'warn') tagColor = 'text-rose-400';
+
+      row.className = 'flex items-start gap-1.5 leading-snug';
+      row.innerHTML = `<span class="text-slate-600 font-mono">[${timeStr}]</span>
+                       <span class="font-bold ${tagColor}">[${system}]</span>
+                       <span class="text-slate-300 break-words">${message}</span>`;
+      
+      terminalFeed.appendChild(row);
+      terminalFeed.scrollTop = terminalFeed.scrollHeight;
+
+      if (terminalFeed.children.length > 50) {
+        terminalFeed.removeChild(terminalFeed.firstChild);
+      }
+    }
+
+    document.getElementById('btn-clear-logs').addEventListener('click', () => {
+      terminalFeed.innerHTML = '';
+      logTerminal('SYS', 'Telemetry event buffer wiped');
+    });
+
+    // Cosmic Clock Updater
+    function updateCosmicClock() {
+      const d = new Date();
+      const ms = String(Math.floor(d.getMilliseconds() / 10)).padStart(2, '0');
+      document.getElementById('coord-time').textContent = d.toTimeString().split(' ')[0] + '.' + ms;
+      requestAnimationFrame(updateCosmicClock);
+    }
+    updateCosmicClock();
+
+    // Random Stress-Energy Matrix updates
+    setInterval(() => {
+      document.getElementById('t00-val').textContent = (1.9 + Math.random() * 0.1).toFixed(2) + 'e9';
+      document.getElementById('t11-val').textContent = (4.8 + Math.random() * 0.05).toFixed(2) + 'e8';
+      document.getElementById('t22-val').textContent = (4.8 - Math.random() * 0.05).toFixed(2) + 'e8';
+      document.getElementById('graviton-flux-readout').textContent = (140 + Math.random() * 6).toFixed(1) + ' PeV';
+    }, 800);
+
+    /* -------------------------------------------------------------
+     * 6. UI EVENT LISTENERS & CONTROL HOOKS
+     * ------------------------------------------------------------- */
+    document.getElementById('btn-audio-init').addEventListener('click', () => {
+      if (!STATE.audioArmed) {
+        initAudioEngine();
+      } else {
+        if (audioCtx.state === 'running') {
+          audioCtx.suspend();
+          document.getElementById('audio-btn-label').textContent = 'RESUME SONIFY';
+          document.getElementById('audio-engine-state').textContent = 'SUSPENDED';
+          document.getElementById('audio-engine-state').className = 'text-amber-400';
+          logTerminal('AUDIO', 'Sonification output paused');
+        } else {
+          audioCtx.resume();
+          document.getElementById('audio-btn-label').textContent = 'MUTED / PAUSE';
+          document.getElementById('audio-engine-state').textContent = 'ACTIVE [48.0 kHz]';
+          document.getElementById('audio-engine-state').className = 'text-emerald-400';
+          logTerminal('AUDIO', 'Sonification output resumed');
+        }
+      }
+    });
+
+    document.getElementById('btn-chirp-trigger').addEventListener('click', () => {
+      triggerGravitationalChirp();
+    });
+
+    document.getElementById('btn-purge-wells').addEventListener('click', () => {
+      singularities.length = 0;
+      particles.length = 0;
+      accretionParticles.length = 0;
+      updateHorizonCount();
+      logTerminal('CARTOGRAPHY', 'All singularities purged from manifold metric');
+    });
+
+    // Preset Loaders
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const preset = e.currentTarget.dataset.preset;
+        loadPreset(preset);
+      });
+    });
+
+    function loadPreset(name) {
+      singularities.length = 0;
+      particles.length = 0;
+      accretionParticles.length = 0;
+      const cx = canvas.width / (2 * window.devicePixelRatio);
+      const cy = canvas.height / (2 * window.devicePixelRatio);
+
+      if (name === 'gw150914') {
+        const b1 = new Singularity(cx - 70, cy, 36, 'kerr');
+        const b2 = new Singularity(cx + 70, cy, 29, 'neutron');
+        b1.vy = 1.3; b2.vy = -1.6;
+        singularities.push(b1, b2);
+        createAccretionDisk(b1, 160);
+        createAccretionDisk(b2, 160);
+        triggerGravitationalChirp();
+        logTerminal('PRESET', 'Loaded GW150914 Historic Inspiral');
+      } else if (name === 'gargantua') {
+        const garg = new Singularity(cx, cy, 110, 'kerr');
+        garg.spin = 0.99;
+        singularities.push(garg);
+        createAccretionDisk(garg, 450);
+        // Add orbital test probe
+        particles.push(new TestParticle(cx + 180, cy, 0, 3.2, false));
+        logTerminal('PRESET', 'Loaded Gargantua Extremal Kerr Ergosphere');
+      } else if (name === 'magnetar') {
+        const mag = new Singularity(cx, cy, 35, 'magnetar');
+        singularities.push(mag);
+        createAccretionDisk(mag, 120);
+        STATE.pulsarActive = true;
+        document.getElementById('btn-pulsar-toggle').classList.add('active');
+        logTerminal('PRESET', 'Loaded Magnetar Fast Radio Burst (FRB)');
+      } else if (name === 'alcubierre') {
+        const w1 = new Singularity(cx - 100, cy, 50, 'wormhole');
+        const w2 = new Singularity(cx + 100, cy, 50, 'wormhole');
+        singularities.push(w1, w2);
+        createAccretionDisk(w1, 100);
+        createAccretionDisk(w2, 100);
+        logTerminal('PRESET', 'Loaded Alcubierre Metric Exotic Topology');
+      }
+      updateHorizonCount();
+    }
+
+    // Metric Toggle Buttons
+    document.querySelectorAll('[data-metric]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-metric]').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        STATE.metric = e.currentTarget.dataset.metric;
+        logTerminal('METRIC', `Spacetime geometry transformed to: ${STATE.metric.toUpperCase()}`);
+      });
+    });
+
+    // Slider Listeners
+    document.getElementById('slider-mass').addEventListener('input', (e) => {
+      STATE.massRatio = parseFloat(e.target.value);
+      document.getElementById('label-mass').textContent = STATE.massRatio.toFixed(1) + ' M☉';
+      document.getElementById('chirp-mass-readout').textContent = (STATE.massRatio * 0.46).toFixed(1) + ' M☉';
+      const rsKm = (STATE.massRatio * 2.95).toFixed(1);
+      document.getElementById('rs-readout').textContent = rsKm + ' km';
+      if (singularities.length > 0) {
+        singularities[0].mass = STATE.massRatio;
+        singularities[0].radius = Math.max(12, Math.sqrt(STATE.massRatio) * 3.5);
+      }
+    });
+
+    document.getElementById('slider-spin').addEventListener('input', (e) => {
+      STATE.spin = parseFloat(e.target.value);
+      document.getElementById('label-spin').textContent = STATE.spin.toFixed(2);
+      singularities.forEach(s => s.spin = STATE.spin);
+    });
+
+    document.getElementById('slider-warp').addEventListener('input', (e) => {
+      STATE.warpShear = parseFloat(e.target.value);
+      document.getElementById('label-warp').textContent = STATE.warpShear.toFixed(2) + 'c';
+    });
+
+    document.getElementById('slider-volume').addEventListener('input', (e) => {
+      STATE.masterVolume = parseFloat(e.target.value);
+      document.getElementById('label-volume').textContent = Math.round(STATE.masterVolume * 100) + '%';
+      if (masterGainNode) masterGainNode.gain.setValueAtTime(STATE.masterVolume, audioCtx.currentTime);
+    });
+
+    document.getElementById('slider-noise').addEventListener('input', (e) => {
+      STATE.noiseLevel = parseFloat(e.target.value);
+      document.getElementById('label-noise').textContent = Math.round(STATE.noiseLevel * 100) + '%';
+      if (noiseGainNode) noiseGainNode.gain.setValueAtTime(STATE.noiseLevel * 0.4, audioCtx.currentTime);
+    });
+
+    document.getElementById('slider-pulsar').addEventListener('input', (e) => {
+      STATE.pulsarRate = parseFloat(e.target.value);
+      document.getElementById('label-pulsar').textContent = STATE.pulsarRate.toFixed(1) + ' Hz';
+    });
+
+    document.getElementById('slider-sub').addEventListener('input', (e) => {
+      STATE.subFreq = parseFloat(e.target.value);
+      document.getElementById('label-sub').textContent = STATE.subFreq + ' Hz';
+      if (subOsc) subOsc.frequency.setValueAtTime(STATE.subFreq, audioCtx.currentTime);
+    });
+
+    // Checkboxes
+    document.getElementById('check-jets').addEventListener('change', (e) => STATE.enableJets = e.target.checked);
+    document.getElementById('check-trails').addEventListener('change', (e) => STATE.enableTrails = e.target.checked);
+    document.getElementById('check-accretion').addEventListener('change', (e) => STATE.enableAccretion = e.target.checked);
+
+    // Audio Toggle Buttons
+    document.getElementById('btn-pulsar-toggle').addEventListener('click', (e) => {
+      if (!STATE.audioArmed) initAudioEngine();
+      STATE.pulsarActive = !STATE.pulsarActive;
+      e.currentTarget.classList.toggle('active', STATE.pulsarActive);
+      logTerminal('AUDIO', `Pulsar radio beacon: ${STATE.pulsarActive ? 'ACTIVE' : 'MUTED'}`);
+    });
+
+    document.getElementById('btn-hawking-noise').addEventListener('click', (e) => {
+      if (!STATE.audioArmed) initAudioEngine();
+      STATE.hawkingActive = !STATE.hawkingActive;
+      e.currentTarget.classList.toggle('active', STATE.hawkingActive);
+      if (noiseGainNode) {
+        noiseGainNode.gain.setValueAtTime(STATE.hawkingActive ? STATE.noiseLevel * 0.4 : 0, audioCtx.currentTime);
+      }
+      logTerminal('AUDIO', `Hawking radiation noise field: ${STATE.hawkingActive ? 'ONLINE' : 'MUTED'}`);
+    });
+
+    // Canvas Snapshot / PNG Export
+    document.getElementById('btn-snapshot').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `chrono-surge-telemetry-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      logTerminal('CARTOGRAPHY', 'Spacetime manifold telemetry map saved to disk');
+    });
+
+    /* -------------------------------------------------------------
+     * 7. BOOTSTRAP INITIALIZATION
+     * ------------------------------------------------------------- */
+    window.addEventListener('load', () => {
+      handleResize();
+      logTerminal('BOOT', 'Relativistic Kernel initialized. Tensor core 64-bit online.');
+      logTerminal('ASTRO', 'FLRW metric manifold ready. Click to arm sonification.');
+      requestAnimationFrame(renderScene);
+    });
+  </script>
+</body>
+</html>
